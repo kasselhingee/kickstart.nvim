@@ -234,65 +234,6 @@ end
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
--- Send current Quarto chunk (R or Python) to Iron REPL
-local function send_quarto_chunk()
-  local bufnr = vim.api.nvim_get_current_buf()
-  local row = vim.api.nvim_win_get_cursor(0)[1]
-
-  local lines_total = vim.api.nvim_buf_line_count(bufnr)
-
-  -- Find chunk start (```{r} or ```{python})
-  local start_line, lang
-  for i = row, 1, -1 do
-    local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
-    local m = line:match '^```{(.*)}'
-    if m then
-      start_line = i
-      lang = m
-      break
-    end
-  end
-  if not start_line then
-    vim.notify('No chunk start found!', vim.log.levels.WARN)
-    return
-  end
-
-  -- Find chunk end (```)
-  local end_line
-  for i = row, lines_total do
-    local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
-    if line:match '^```$' then
-      end_line = i
-      break
-    end
-  end
-  if not end_line then
-    vim.notify('No chunk end found!', vim.log.levels.WARN)
-    return
-  end
-
-  -- Get the chunk lines
-  local chunk_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line - 1, false)
-
-  -- Start REPL if not running
-  local iron = require 'iron.core'
-  local repl = iron.get_current 'repl'
-  if not repl then
-    if lang == 'r' then
-      vim.cmd 'IronRepl r'
-    elseif lang == 'python' then
-      vim.cmd 'IronRepl python'
-    else
-      vim.notify('Unsupported chunk language: ' .. lang, vim.log.levels.WARN)
-      return
-    end
-  end
-
-  -- Send chunk to current REPL
-  repl = iron.get_current 'repl' -- refresh after starting
-  repl:send(chunk_lines)
-end
-
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -403,7 +344,6 @@ require('lazy').setup({
       { '<space>rh', '<cmd>IronHide<cr>', desc = 'Hide REPL' },
       { '<space>rs', '<cmd>IronRepl r<cr>', desc = 'Start R REPL' }, -- using rs because rr is used above
       { '<space>rp', '<cmd>IronRepl python<cr>', desc = 'Start Python REPL' },
-      { '<space>sa', send_quarto_chunk, desc = 'Start a Quarto chunk' },
     },
   }, -- END OF iron.vim settings
 
