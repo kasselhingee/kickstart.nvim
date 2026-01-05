@@ -234,6 +234,65 @@ end
 local rtp = vim.opt.rtp
 rtp:prepend(lazypath)
 
+-- Send current Quarto chunk (R or Python) to Iron REPL
+local function send_quarto_chunk()
+  local bufnr = vim.api.nvim_get_current_buf()
+  local row = vim.api.nvim_win_get_cursor(0)[1]
+
+  local lines_total = vim.api.nvim_buf_line_count(bufnr)
+
+  -- Find chunk start (```{r} or ```{python})
+  local start_line, lang
+  for i = row, 1, -1 do
+    local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+    local m = line:match '^```{(.*)}'
+    if m then
+      start_line = i
+      lang = m
+      break
+    end
+  end
+  if not start_line then
+    vim.notify('No chunk start found!', vim.log.levels.WARN)
+    return
+  end
+
+  -- Find chunk end (```)
+  local end_line
+  for i = row, lines_total do
+    local line = vim.api.nvim_buf_get_lines(bufnr, i - 1, i, false)[1]
+    if line:match '^```$' then
+      end_line = i
+      break
+    end
+  end
+  if not end_line then
+    vim.notify('No chunk end found!', vim.log.levels.WARN)
+    return
+  end
+
+  -- Get the chunk lines
+  local chunk_lines = vim.api.nvim_buf_get_lines(bufnr, start_line, end_line - 1, false)
+
+  -- Start REPL if not running
+  local iron = require 'iron.core'
+  local repl = iron.get_current 'repl'
+  if not repl then
+    if lang == 'r' then
+      vim.cmd 'IronRepl r'
+    elseif lang == 'python' then
+      vim.cmd 'IronRepl python'
+    else
+      vim.notify('Unsupported chunk language: ' .. lang, vim.log.levels.WARN)
+      return
+    end
+  end
+
+  -- Send chunk to current REPL
+  repl = iron.get_current 'repl' -- refresh after starting
+  repl:send(chunk_lines)
+end
+
 -- [[ Configure and install plugins ]]
 --
 --  To check the current status of your plugins, run
@@ -283,6 +342,11 @@ require('lazy').setup({
               command = { 'R' }, -- or {"radian"}
               format = require('iron.fts.common').bracketed_paste_r,
             },
+            quarto = { -- n
+              command = { 'R' }, -- or {"radian"}
+              format = require('iron.fts.common').bracketed_paste_r,
+              block_dividers = { '```{r}', '```' },
+            },
           },
           -- set the file type of the newly created repl to ft
           -- bufnr is the buffer id of the REPL and ft is the filetype of the
@@ -295,22 +359,7 @@ require('lazy').setup({
           -- Send selections to the DAP repl if an nvim-dap session is running.
           dap_integration = true,
           -- How the repl window will be displayed
-          -- See below for more information
-          repl_open_cmd = view.bottom(40),
-
-          -- repl_open_cmd can also be an array-style table so that multiple
-          -- repl_open_commands can be given.
-          -- When repl_open_cmd is given as a table, the first command given will
-          -- be the command that `IronRepl` initially toggles.
-          -- Moreover, when repl_open_cmd is a table, each key will automatically
-          -- be available as a keymap (see `keymaps` below) with the names
-          -- toggle_repl_with_cmd_1, ..., toggle_repl_with_cmd_k
-          -- For example,
-          --
-          -- repl_open_cmd = {
-          --   view.split.vertical.rightbelow("%40"), -- cmd_1: open a repl to the right
-          --   view.split.rightbelow("%25")  -- cmd_2: open a repl below
-          -- }
+          repl_open_cmd = 'rightbelow vsplit',
         },
         -- Iron doesn't set keymaps by default anymore.
         -- You can set them here or manually add keymaps to the functions in iron.core
@@ -346,10 +395,15 @@ require('lazy').setup({
         ignore_blank_lines = true, -- ignore blank lines when sending visual select lines
       }
     end,
+
     -- iron also has a list of commands, see :h iron-commands for all available commands
     keys = {
+      -- use these to open R, Python etc repl
       { '<space>rf', '<cmd>IronFocus<cr>', desc = 'Focus REPL' },
       { '<space>rh', '<cmd>IronHide<cr>', desc = 'Hide REPL' },
+      { '<space>rs', '<cmd>IronRepl r<cr>', desc = 'Start R REPL' }, -- using rs because rr is used above
+      { '<space>rp', '<cmd>IronRepl python<cr>', desc = 'Start Python REPL' },
+      { '<space>sa', send_quarto_chunk, desc = 'Start a Quarto chunk' },
     },
   }, -- END OF iron.vim settings
 
