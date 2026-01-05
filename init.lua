@@ -249,6 +249,27 @@ require('lazy').setup({
   -- NOTE: Plugins can be added with a link (or for a github repo: 'owner/repo' link).
   'NMAC427/guess-indent.nvim', -- Detect tabstop and shiftwidth automatically
 
+  { -- requires plugins in lua/plugins/treesitter.lua and lua/plugins/lsp.lua
+    -- for complete functionality (language features)
+    'quarto-dev/quarto-nvim',
+    dev = false,
+    opts = {
+      lspFeatures = {
+        enabled = true,
+        chunks = 'curly',
+      },
+      codeRunner = {
+        enabled = true,
+        default_method = 'iron',
+      },
+    },
+    dependencies = {
+      -- for language features in code cells
+      -- configured in lua/plugins/lsp.lua
+      'jmbuhr/otter.nvim',
+    },
+  },
+
   -- NOTE: Plugins can also be added by using a table,
   -- with the first argument being the link and the following
   -- keys can be used to configure plugin behavior/loading/etc.
