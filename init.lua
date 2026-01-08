@@ -1152,5 +1152,33 @@ require('lazy').setup({
   },
 })
 
+-- Some custom commands of my own
+local cmd = vim.api.nvim_create_user_command
+
+cmd('tex', function(opts)
+  local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
+  vim.cmd('!Rscript -e \'tinytex::pdflatex(commandArgs(trailingOnly = TRUE)[1], bib_engine = "biber", install_packages = FALSE)\'' .. file .. opts.args)
+end, { nargs = '?', complete = 'file' })
+
+cmd('Rmd', function(opts)
+  local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
+  vim.cmd('!Rscript ~/rmarkdownrender.R ' .. file .. opts.args)
+end, { nargs = '?', complete = 'file' })
+
+cmd('Rnw', function(opts)
+  local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
+  vim.cmd('!Rscript ~/sweaverender.R ' .. file .. opts.args)
+end, { nargs = '?', complete = 'file' })
+
+cmd('M', function(opts)
+  local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
+  vim.cmd('!pandoc --number-sections --toc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
+end, { nargs = '?', complete = 'file' })
+
+cmd('Msmall', function(opts)
+  local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
+  vim.cmd('!pandoc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
+end, { nargs = '?', complete = 'file' })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
