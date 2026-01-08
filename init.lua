@@ -1155,7 +1155,7 @@ require('lazy').setup({
 -- Some custom commands of my own
 local cmd = vim.api.nvim_create_user_command
 
-cmd('tex', function(opts)
+cmd('T', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
   vim.cmd('!Rscript -e \'tinytex::pdflatex(commandArgs(trailingOnly = TRUE)[1], bib_engine = "biber", install_packages = FALSE)\'' .. file .. opts.args)
 end, { nargs = '?', complete = 'file' })
