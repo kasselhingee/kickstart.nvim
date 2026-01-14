@@ -305,10 +305,10 @@ require('lazy').setup({
           scratch_repl = true,
           -- Your repl definitions come here
           repl_definition = {
-            sh = {
+            bash = {
               -- Can be a table or a function that
               -- returns a table (see below)
-              command = { 'zsh' },
+              command = { 'bash' },
             },
             python = {
               command = { 'python3' }, -- or { "ipython", "--no-autoindent" }
