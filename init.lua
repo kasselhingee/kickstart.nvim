@@ -318,7 +318,7 @@ require('lazy').setup({
             },
             r = {
               command = { 'R' }, -- or {"radian"}
-              format = require('iron.fts.common').bracketed_paste_r,
+              format = require('iron.fts.common').bracketed_paste,
             },
           },
           -- set the file type of the newly created repl to ft
@@ -365,7 +365,7 @@ require('lazy').setup({
         highlight = {
           italic = true,
         },
-        ignore_blank_lines = true, -- ignore blank lines when sending visual select lines
+        ignore_blank_lines = false, -- ignore blank lines when sending visual select lines
       }
     end,
 
@@ -1157,7 +1157,7 @@ local cmd = vim.api.nvim_create_user_command
 
 cmd('T', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
-  vim.cmd('!Rscript -e \'tinytex::pdflatex(commandArgs(trailingOnly = TRUE)[1], bib_engine = "biber", install_packages = FALSE)\'' .. file .. opts.args)
+  vim.cmd('!Rscript -e \'tinytex::pdflatex(\"' .. file .. '\", bib_engine = "biber", install_packages = FALSE) \'')
 end, { nargs = '?', complete = 'file' })
 
 cmd('Rmd', function(opts)
