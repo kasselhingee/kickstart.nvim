@@ -320,6 +320,10 @@ require('lazy').setup({
               command = { 'R' }, -- or {"radian"}
               format = require('iron.fts.common').bracketed_paste,
             },
+            rmd = {
+              command = { 'R' }, -- or {"radian"}
+              format = require('iron.fts.common').bracketed_paste,
+            },
           },
           -- set the file type of the newly created repl to ft
           -- bufnr is the buffer id of the REPL and ft is the filetype of the
@@ -1157,7 +1161,7 @@ local cmd = vim.api.nvim_create_user_command
 
 cmd('T', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
-  vim.cmd('!Rscript -e \'tinytex::pdflatex(\"' .. file .. '\", bib_engine = "biber", install_packages = FALSE) \'')
+  vim.cmd('!Rscript -e \'tinytex::pdflatex("' .. file .. '", bib_engine = "biber", install_packages = FALSE) \'')
 end, { nargs = '?', complete = 'file' })
 
 cmd('Rmd', function(opts)
