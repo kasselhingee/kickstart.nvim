@@ -1200,6 +1200,41 @@ cmd('Msmall', function(opts)
   vim.cmd('!pandoc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
 end, { nargs = '?', complete = 'file' })
 
+-- Send entire code chunk containing cursor to REPL
+vim.keymap.set('n', '<space>se', function()
+  local iron = require 'iron.core'
+  local current_line = vim.fn.line '.'
+  local last_line = vim.fn.line '$'
+  local open_fence = nil
+  local close_fence = nil
+  for i = current_line, 1, -1 do
+    if vim.fn.getline(i):sub(1, 3) == '```' then
+      open_fence = i
+      break
+    end
+  end
+  for i = current_line, last_line do
+    if vim.fn.getline(i):sub(1, 3) == '```' then
+      close_fence = i
+      break
+    end
+  end
+  if not open_fence then
+    vim.notify('No opening code fence (```) found above cursor', vim.log.levels.WARN)
+    return
+  end
+  if not close_fence then
+    vim.notify('No closing code fence (```) found below cursor', vim.log.levels.WARN)
+    return
+  end
+  if open_fence == close_fence then
+    vim.notify('Cursor is on the fence line itself', vim.log.levels.WARN)
+    return
+  end
+  local lines = vim.fn.getline(open_fence + 1, close_fence - 1)
+  iron.send(nil, lines)
+end, { desc = 'Send entire code chunk → REPL' })
+
 -- Send from line below nearest ``` above cursor, up to current line, to REPL
 vim.keymap.set('n', '<space>st', function()
   local iron = require 'iron.core'
