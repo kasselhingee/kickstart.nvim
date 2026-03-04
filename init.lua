@@ -1201,7 +1201,7 @@ cmd('Msmall', function(opts)
 end, { nargs = '?', complete = 'file' })
 
 -- Send from line below nearest ``` above cursor, up to current line, to REPL
-vim.keymap.set('n', '<space>sk', function()
+vim.keymap.set('n', '<space>st', function()
   local iron = require 'iron.core'
   local current_line = vim.fn.line '.'
   local fence_line = nil
