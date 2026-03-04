@@ -1108,6 +1108,22 @@ require('lazy').setup({
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
 
+  -- Claude Code integration
+  {
+    'coder/claudecode.nvim',
+    dependencies = { 'folke/snacks.nvim' },
+    config = true,
+    keys = {
+      { '<leader>ac', '<cmd>ClaudeCode<cr>', desc = 'Toggle Claude' },
+      { '<leader>af', '<cmd>ClaudeCodeFocus<cr>', desc = 'Focus Claude' },
+      { '<leader>ab', '<cmd>ClaudeCodeAdd %<cr>', desc = 'Add buffer to Claude' },
+      { '<leader>as', '<cmd>ClaudeCodeSend<cr>', mode = 'v', desc = 'Send selection to Claude' },
+      { '<leader>as', '<cmd>ClaudeCodeTreeAdd<cr>', desc = 'Add file', ft = { 'NvimTree', 'neo-tree', 'oil', 'minifiles', 'netrw' } },
+      { '<leader>aa', '<cmd>ClaudeCodeDiffAccept<cr>', desc = 'Accept Claude diff' },
+      { '<leader>ad', '<cmd>ClaudeCodeDiffDeny<cr>', desc = 'Reject Claude diff' },
+    },
+  },
+
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
@@ -1183,6 +1199,30 @@ cmd('Msmall', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
   vim.cmd('!pandoc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
 end, { nargs = '?', complete = 'file' })
+
+-- Send from line below nearest ``` above cursor, up to current line, to REPL
+vim.keymap.set('n', '<space>sk', function()
+  local iron = require 'iron.core'
+  local current_line = vim.fn.line '.'
+  local fence_line = nil
+  for i = current_line, 1, -1 do
+    if vim.fn.getline(i):match '^```' then
+      fence_line = i
+      break
+    end
+  end
+  if not fence_line then
+    vim.notify('No code fence (```) found above cursor', vim.log.levels.WARN)
+    return
+  end
+  local start_line = fence_line + 1
+  if start_line > current_line then
+    vim.notify('Cursor is on the fence line itself', vim.log.levels.WARN)
+    return
+  end
+  local lines = vim.fn.getline(start_line, current_line)
+  iron.send(nil, lines)
+end, { desc = 'Send from code fence to cursor → REPL' })
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
