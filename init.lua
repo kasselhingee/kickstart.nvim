@@ -1159,12 +1159,12 @@ end, { nargs = '?', complete = 'file' })
 
 cmd('M', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
-  vim.cmd('!pandoc --number-sections --toc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
+  vim.cmd('!pandoc --number-sections --toc ' .. file .. ' --pdf-engine=typst -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf')
 end, { nargs = '?', complete = 'file' })
 
 cmd('Msmall', function(opts)
   local file = opts.args ~= '' and opts.args or vim.fn.expand '%'
-  vim.cmd('!pandoc ' .. file .. ' -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf -V geometry:margin=1in')
+  vim.cmd('!pandoc ' .. file .. ' --pdf-engine=typst -o ' .. vim.fn.fnamemodify(file, ':r') .. '.pdf')
 end, { nargs = '?', complete = 'file' })
 
 -- Send entire code chunk containing cursor to REPL
